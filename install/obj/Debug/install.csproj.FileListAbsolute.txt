@@ -1,0 +1,7 @@
+C:\Users\Smile\Desktop\install\install\install\bin\Debug\install.exe
+C:\Users\Smile\Desktop\install\install\install\bin\Debug\install.pdb
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.csprojAssemblyReference.cache
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.Properties.Resources.resources
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.csproj.GenerateResource.cache
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.exe
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.pdb
