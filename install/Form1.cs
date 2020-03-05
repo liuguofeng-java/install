@@ -1,8 +1,9 @@
-﻿using System;s
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using System.Diagnostics;
+using System;
 
 namespace install
 {
@@ -17,9 +18,10 @@ namespace install
 
         private void button1_Click(object sender, EventArgs e)
         {
-
+           string cmd = ExecCommand("java");
+            MessageBox.Show(cmd);
         }
-       
+
         //安装mysql
         protected void InsertMySql()
         {
@@ -32,12 +34,12 @@ namespace install
 
             Console.WriteLine("创建win服务……");
             //2.创建win服务
-            string info1 = CommandHelper.Execute(appPath + "bin\\mysqld.exe", " install MySQL2 --defaults-file=\"" + appPath + "my.ini\"", 0);
+            string info1 = null;//ExecCommand(appPath + "bin\\mysqld.exe", " install MySQL2 --defaults-file=\"" + appPath + "my.ini\"");
             Console.WriteLine(info1);
             Thread.Sleep(3000);
             Console.WriteLine("使用net start启动服务");
             //3.启动服务
-            string info2 = CommandHelper.Execute("net start MySQL2", 0);
+            string info2 = ExecCommand("net start MySQL2");
             Console.WriteLine(info2);
 
             Console.WriteLine("启动服务完成!");
@@ -88,6 +90,38 @@ namespace install
 
         }
 
-       
+
+        /// <summary>
+        /// 执行系统CMD命令
+        /// </summary>
+        /// <param name="commandText">命令文本</param>
+        /// <returns></returns>
+        public static string ExecCommand(string commandText)
+        {
+            Process process = new Process();//启动Process进程管理对象
+            process.StartInfo.FileName = "cmd.exe";//调用cmd shell
+            process.StartInfo.UseShellExecute = false;//设置是否启用操作系统的Shell启动进程
+            process.StartInfo.RedirectStandardInput = true;//应用程序的输入是否从RedirectStandardInput流中获取
+            process.StartInfo.RedirectStandardOutput = true;//应用程序的输出是否写到RedirectStandardOutput流中
+            process.StartInfo.RedirectStandardError = true;//是否将错误信息写入到RedirectStandardError流中
+            process.StartInfo.CreateNoWindow = true;//是否在新窗口中启动该进程
+                                                    //p.StartInfo.WorkingDirectory = Server.MapPath("../resources/") + sessionPath;
+            string strOutput = null;
+            try
+            {
+                process.Start();
+                process.StandardInput.WriteLine(commandText);
+                process.StandardInput.WriteLine("exit");
+                strOutput = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                process.Close();
+            }
+            catch (Exception e)
+            {
+                strOutput = e.Message;
+               // LogHelper.WriteMessageErrorLog(e.Message);
+            }
+            return strOutput;
+        }
     }
 }
