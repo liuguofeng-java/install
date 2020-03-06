@@ -14,11 +14,11 @@ namespace install.server
         /// </summary>
         /// <param name="FileStreamPath"></param>
         /// <param name=""></param>
-        public static void CreateShortCut(string FileStreamPath, string DesktopPath)
+        public static void CreateShortCut(string FileStreamPath, string DesktopPath,string name)
         {
             WshShell shell = new WshShell();
             FileInfo fileInfo = new FileInfo(FileStreamPath);
-            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(DesktopPath + "\\" + fileInfo.Name + ".lnk");
+            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(DesktopPath + "\\" + name + ".lnk");
             shortcut.TargetPath = FileStreamPath;
             shortcut.Arguments = "";
             shortcut.Description = "快捷方式";

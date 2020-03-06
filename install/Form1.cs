@@ -15,6 +15,7 @@ namespace install
         public Form1()
         {
             InitializeComponent();
+            string connectMysql = Cmd.RunCmd("mysql -uroot -p1234", @"D:\ProgramFiles\mysql\bin");
         }
 
         /// <summary>
@@ -26,15 +27,86 @@ namespace install
         {
             try
             {
-                Thread authThread = new Thread(new ThreadStart());
-                //启动线程
-                authThread.Start();
                 //解压mysql
                 CompressFileAndDeleFile("mysql");
                 //解压nginx
                 CompressFileAndDeleFile("nginx");
                 //解压mysql
                 CompressFileAndDeleFile("PEIS");
+
+                //开启nginx服务
+                string nginxPath = "";
+                GetFilePath.GetFile("D://", "nginx.exe", ref nginxPath);
+                textBox1.Text += "正在nginx服务" + "\r\n";
+                label1.Text = "正在nginx服务";
+                SetUpShortcut.CreateShortCut(nginxPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup),"nginx.exe");
+                textBox1.Text += "已nginx服务" + "\r\n";
+                label1.Text = "已nginx服务";
+
+                //创建快捷方式
+                string PeisPlatformPath = "";
+                GetFilePath.GetFile("D://", "PeisPlatform.exe", ref PeisPlatformPath);
+                textBox1.Text += "正在创建快捷方式" + "\r\n";
+                label1.Text = "正在创建快捷方式";
+                SetUpShortcut.CreateShortCut(PeisPlatformPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "新版采集端");
+                textBox1.Text += "已创建快捷方式" + "\r\n";
+                label1.Text = "已创建快捷方式";
+
+                //安装MySQL
+                textBox1.Text += "正在安装MySQL" + "\r\n";
+                label1.Text = "正在安装MySQL";
+                string mysqld = Cmd.RunCmd("mysqld --initialize --user=mysql --console", @"D:\ProgramFiles\mysql\bin");
+                if(mysqld.Contains("A temporary password is generated for root@localhost:"))
+                {
+                    textBox1.Text += "成功获取MySQL随机密码" + "\r\n";
+                    label1.Text = "成功获取MySQL随机密码";
+                }
+                else
+                {
+                    textBox1.Text += "安装MySQL出错了" + "\r\n";
+                    label1.Text = "安装MySQL出错了";
+                    return;
+                }
+                //安装MySQL服务
+                string install = Cmd.RunCmd("mysqld --install", @"D:\ProgramFiles\mysql\bin");
+                if (install.Contains("Service successfully installed."))
+                {
+                    textBox1.Text += "服务成功安装" + "\r\n";
+                    label1.Text = "服务成功安装";
+                }
+                else
+                {
+                    textBox1.Text += "无法安装MySQL服务" + "\r\n";
+                    label1.Text = "无法安装MySQL服务";
+                    return;
+                }
+                //启动MySQL服务
+                string startMysql = Cmd.RunCmd("net start mysql", @"D:\ProgramFiles\mysql\bin");
+                if (startMysql.Contains("服务已经启动成功"))
+                {
+                    textBox1.Text += "服务已经启动成功" + "\r\n";
+                    label1.Text = "服务已经启动成功";
+                }
+                else
+                {
+                    textBox1.Text += "无法启动MySQL服务" + "\r\n";
+                    label1.Text = "无法启动MySQL服务";
+                    return;
+                }
+                //连接MySQL
+                string connectMysql = Cmd.RunCmd("net start mysql", @"D:\ProgramFiles\mysql\bin");
+                if (mysqld.Contains("服务已经启动成功"))
+                {
+                    textBox1.Text += "服务已经启动成功" + "\r\n";
+                    label1.Text = "服务已经启动成功";
+                }
+                else
+                {
+                    textBox1.Text += "无法启动MySQL服务" + "\r\n";
+                    label1.Text = "无法启动MySQL服务";
+                    return;
+                }
+
             }
             catch (Exception ex)
             {
