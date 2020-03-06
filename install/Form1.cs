@@ -15,7 +15,6 @@ namespace install
         public Form1()
         {
             InitializeComponent();
-            string connectMysql = Cmd.RunCmd("mysql -uroot -p1234", @"D:\ProgramFiles\mysql\bin");
         }
 
         /// <summary>
@@ -48,14 +47,14 @@ namespace install
                 GetFilePath.GetFile("D://", "PeisPlatform.exe", ref PeisPlatformPath);
                 textBox1.Text += "正在创建快捷方式" + "\r\n";
                 label1.Text = "正在创建快捷方式";
-                SetUpShortcut.CreateShortCut(PeisPlatformPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "新版采集端");
+                SetUpShortcut.CreateShortCut(PeisPlatformPath, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "新版采集端");
                 textBox1.Text += "已创建快捷方式" + "\r\n";
                 label1.Text = "已创建快捷方式";
 
                 //安装MySQL
                 textBox1.Text += "正在安装MySQL" + "\r\n";
                 label1.Text = "正在安装MySQL";
-                string mysqld = Cmd.RunCmd("mysqld --initialize --user=mysql --console", @"D:\ProgramFiles\mysql\bin");
+                string mysqld = Cmd.ExecCommand("mysqld --initialize --user=mysql --console", @"D:\ProgramFiles\mysql\bin");
                 if(mysqld.Contains("A temporary password is generated for root@localhost:"))
                 {
                     textBox1.Text += "成功获取MySQL随机密码" + "\r\n";
@@ -68,7 +67,7 @@ namespace install
                     return;
                 }
                 //安装MySQL服务
-                string install = Cmd.RunCmd("mysqld --install", @"D:\ProgramFiles\mysql\bin");
+                string install = Cmd.ExecCommand("mysqld --install", @"D:\ProgramFiles\mysql\bin");
                 if (install.Contains("Service successfully installed."))
                 {
                     textBox1.Text += "服务成功安装" + "\r\n";
@@ -81,7 +80,7 @@ namespace install
                     return;
                 }
                 //启动MySQL服务
-                string startMysql = Cmd.RunCmd("net start mysql", @"D:\ProgramFiles\mysql\bin");
+                string startMysql = Cmd.ExecCommand("net start mysql", @"D:\ProgramFiles\mysql\bin");
                 if (startMysql.Contains("服务已经启动成功"))
                 {
                     textBox1.Text += "服务已经启动成功" + "\r\n";
@@ -94,7 +93,7 @@ namespace install
                     return;
                 }
                 //连接MySQL
-                string connectMysql = Cmd.RunCmd("net start mysql", @"D:\ProgramFiles\mysql\bin");
+                string connectMysql = Cmd.ExecCommand("net start mysql", @"D:\ProgramFiles\mysql\bin");
                 if (mysqld.Contains("服务已经启动成功"))
                 {
                     textBox1.Text += "服务已经启动成功" + "\r\n";

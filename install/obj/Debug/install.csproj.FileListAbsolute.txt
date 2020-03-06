@@ -19,3 +19,10 @@ C:\Users\Administrator\Desktop\install\install\obj\Debug\install.csproj.CopyComp
 C:\Users\Administrator\Desktop\install\install\obj\Debug\Interop.IWshRuntimeLibrary.dll
 C:\Users\Administrator\Desktop\install\install\obj\Debug\install.csproj.ResolveComReference.cache
 C:\Users\Administrator\Desktop\install\install\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Smile\Desktop\install\install\install\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Smile\Desktop\install\install\install\bin\Debug\MySql.Data.dll
+C:\Users\Smile\Desktop\install\install\install\bin\Debug\Simple.Data.dll
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\Interop.IWshRuntimeLibrary.dll
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.csproj.ResolveComReference.cache
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.Form1.resources
+C:\Users\Smile\Desktop\install\install\install\obj\Debug\install.csproj.CopyComplete
