@@ -16,13 +16,67 @@ namespace install
 {
     public partial class Form1 : Form
     {
-        public static string url = @"D:\\ProgramFiles";
+        //设置这个委托支持异步调用文本框控件的文本属性。
+        delegate void SetTextCallback(string text);
+        delegate void SetTextPanel(int text);
+        public static string url = @"D:\ProgramFiles";
+        public static string mysqlBinUrl = @"D:\ProgramFiles\mysql\bin";
+        public static string myIniPath = @"D:\ProgramFiles\mysql\my.ini";
+        public static int panel = 10;
         
         public Form1()
         {
             InitializeComponent();
         }
-
+        //异步给input赋值
+        private void SetTextBox(string text)
+        {
+            if (this.textBox1.InvokeRequired)
+            {
+                SetTextCallback d = new SetTextCallback(SetTextBox);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                //在此设置textBox1的文本
+                this.textBox1.Text += text + "\r\n";
+            }
+        }
+        //异步给input赋值
+        private void SetLabel(string text)
+        {
+            if (this.label1.InvokeRequired)
+            {
+                SetTextCallback d = new SetTextCallback(SetLabel);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                //在此设置textBox1的文本
+                this.label1.Text = text;
+            }
+        }
+        //异步给input赋值
+        private void SetPanel(int text)
+        {
+            if (this.label1.InvokeRequired)
+            {
+                SetTextPanel d = new SetTextPanel(SetPanel);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                //在此设置textBox1的文本
+                this.panel2.Width = text;
+            }
+        }
+        //简化调用代码
+        public void ExecuteMethod(string text)
+        {
+            this.SetTextBox(text);
+            this.SetLabel(text);
+            this.SetPanel(panel);
+        }
         /// <summary>
         /// 点击确定
         /// </summary>
@@ -32,140 +86,150 @@ namespace install
         {
             try
             {
-                //解压mysql
-                CompressFileAndDeleFile("mysql");
-                //解压nginx
-                CompressFileAndDeleFile("nginx");
-                //解压mysql
-                CompressFileAndDeleFile("PEIS");
-
-                //开启nginx服务
-                string nginxPath = "";
-                GetFilePath.GetFile("D://", "nginx.exe", ref nginxPath);
-                textBox1.Text += "正在nginx服务" + "\r\n";
-                label1.Text = "正在nginx服务";
-                SetUpShortcut.CreateShortCut(nginxPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "nginx.exe");
-                textBox1.Text += "已nginx服务" + "\r\n";
-                label1.Text = "已nginx服务";
-
-                //创建快捷方式
-                string PeisPlatformPath = "";
-                GetFilePath.GetFile("D://", "PeisPlatform.exe", ref PeisPlatformPath);
-                textBox1.Text += "正在创建快捷方式" + "\r\n";
-                label1.Text = "正在创建快捷方式";
-                SetUpShortcut.CreateShortCut(PeisPlatformPath, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "新版采集端");
-                textBox1.Text += "已创建快捷方式" + "\r\n";
-                label1.Text = "已创建快捷方式";
-
-                //安装MySQL
-                textBox1.Text += "正在安装MySQL" + "\r\n";
-                label1.Text = "正在安装MySQL";
-                string mysqld = Cmd.ExecCommand("mysqld --initialize --user=mysql --console", @"D:\ProgramFiles\mysql\bin");
-                if (mysqld.Contains("A temporary password is generated for root@localhost:"))
-                {
-                    textBox1.Text += "成功获取MySQL随机密码" + "\r\n";
-                    label1.Text = "成功获取MySQL随机密码";
-                }
-                else
-                {
-                    textBox1.Text += "安装MySQL出错了" + "\r\n";
-                    label1.Text = "安装MySQL出错了";
-                    return;
-                }
-                //安装MySQL服务
-                string install = Cmd.ExecCommand("mysqld --install", @"D:\ProgramFiles\mysql\bin");
-                if (install.Contains("Service successfully installed."))
-                {
-                    textBox1.Text += "服务成功安装" + "\r\n";
-                    label1.Text = "服务成功安装";
-                }
-                else
-                {
-                    textBox1.Text += "无法安装MySQL服务" + "\r\n";
-                    label1.Text = "无法安装MySQL服务";
-                    return;
-                }
-                //启动MySQL服务
-                string startMysql = Cmd.ExecCommand("net start mysql", @"D:\ProgramFiles\mysql\bin");
-                if (startMysql.Contains("服务已经启动成功"))
-                {
-                    textBox1.Text += "服务已经启动成功" + "\r\n";
-                    label1.Text = "服务已经启动成功";
-                }
-                else
-                {
-                    textBox1.Text += "无法启动MySQL服务" + "\r\n";
-                    label1.Text = "无法启动MySQL服务";
-                    return;
-                }
-                //连接MySQL修改密码
-                textBox1.Text += "正在设置MySQL密码" + "\r\n";
-                label1.Text = "正在设置MySQL密码";
-                int i = DbHelperMySQL.ExecuteSql("update user set authentication_string=password('KunYujk1!') where user='root';");
-                if (i > 0)
-                {
-                    textBox1.Text += "设置成功" + "\r\n";
-                    label1.Text = "设置成功";
-                }
-                else
-                {
-                    textBox1.Text += "设置失败" + "\r\n";
-                    label1.Text = "设置失败";
-                }
-                //添加新用户
-                //设置ini文件
-                string data = "[mysql]" + "\r\n"
-                                + "# 设置mysql客户端默认字符集" + "\r\n"
-                                + "default-character-set = utf8" + "\r\n"
-                                + "[mysqld]" + "\r\n"
-                                + "#设置3306端口" + "\r\n"
-                                + "port = 3307" + "\r\n"
-                                + "# 设置mysql的安装目录" + "\r\n"
-                                + "basedir = D:\\ProgramFiles\\mysql" + "\r\n"
-                                + "# 设置mysql数据库的数据的存放目录" + "\r\n"
-                                + "datadir = D:\\ProgramFiles\\mysql\\data" + "\r\n"
-                                + "# 允许最大连接数" + "\r\n"
-                                + "max_connections = 200" + "\r\n"
-                                + "# 服务端使用的字符集默认为8比特编码的latin1字符集" + "\r\n"
-                                + "character-set-server = utf8" + "\r\n"
-                                + "# 创建新表时将使用的默认存储引擎" + "\r\n"
-                                + "default-storage-engine = INNODB" +"\r\n";
-                byte[] bytes = Encoding.UTF8.GetBytes(data);
-                FileStream fs = new FileStream(@"D:\ProgramFiles\mysql\my.ini", FileMode.Create);
-                fs.Write(bytes, 0, bytes.Length);
-                fs.Close();
-                string restartMysql = Cmd.ExecCommand("net stop mysql", @"D:\ProgramFiles\mysql\bin");
-                restartMysql = Cmd.ExecCommand("net start mysql", @"D:\ProgramFiles\mysql\bin");
-                if (!restartMysql.Contains("服务已经启动成功"))
-                {
-                    textBox1.Text += "重启mysql服务失败" + "\r\n";
-                    label1.Text = "重启mysql服务失败";
-                }
-                //添加新用户
-                DbHelperMySQL.ExecuteSql("CREATE USER 'kyjk'@'%' IDENTIFIED BY 'KunYujk1!';");
-                DbHelperMySQL.ExecuteSql("GRANT ALL ON *.* TO 'kyjk'@'%';");
+                Thread t = new Thread(new ThreadStart(server));
+                t.Start();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
+        public void server()
+        {
+            /*//解压mysql
+            CompressFileAndDeleFile("mysql");
+            ExecuteMethod("正在添加my.ini");
+            string data = "[mysql]" + "\r\n"
+                            + "# 设置mysql客户端默认字符集" + "\r\n"
+                            + "default-character-set = utf8" + "\r\n"
+                            + "[mysqld]" + "\r\n"
+                            + "#设置3306端口" + "\r\n"
+                            + "port = 3307" + "\r\n"
+                            + "# 设置mysql的安装目录" + "\r\n"
+                            + "basedir = D:\\ProgramFiles\\mysql" + "\r\n"
+                            + "# 设置mysql数据库的数据的存放目录" + "\r\n"
+                            + "datadir = D:\\ProgramFiles\\mysql\\data" + "\r\n"
+                            + "# 允许最大连接数" + "\r\n"
+                            + "max_connections = 200" + "\r\n"
+                            + "# 服务端使用的字符集默认为8比特编码的latin1字符集" + "\r\n"
+                            + "character-set-server = utf8" + "\r\n"
+                            + "# 创建新表时将使用的默认存储引擎" + "\r\n"
+                            + "default-storage-engine = INNODB" + "\r\n"
+                            + "# 超时时间" + "\r\n"
+                            + "default_password_lifetime=0" + "\r\n"
+                            + "# 跳过密码" + "\r\n"
+                            + "skip-grant-tables" + "\r\n";
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            FileStream fs = new FileStream(myIniPath, FileMode.Create);
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Close();
+            ExecuteMethod("添加my.ini成功");
+
+            //解压nginx
+            CompressFileAndDeleFile("nginx");
+            //解压mysql
+            CompressFileAndDeleFile("PEIS");
+
+            //开启nginx服务
+            string nginxPath = "";
+            GetFilePath.GetFile("D://", "nginx.exe", ref nginxPath);
+            ExecuteMethod("正在nginx服务");
+            SetUpShortcut.CreateShortCut(nginxPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "nginx.exe");
+            ExecuteMethod("已开启nginx服务");
+
+
+            //创建快捷方式
+            string PeisPlatformPath = "";
+            GetFilePath.GetFile("D://", "PeisPlatform.exe", ref PeisPlatformPath);
+            ExecuteMethod("正在创建快捷方式");
+            SetUpShortcut.CreateShortCut(PeisPlatformPath, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "新版采集端");
+            ExecuteMethod("已创建快捷方式");
+
+
+            //安装MySQL
+            ExecuteMethod("正在安装MySQL");
+            string mysqld = Cmd.ExecCommand("mysqld --initialize --user=mysql --console", mysqlBinUrl);
+            if (mysqld.Contains("A temporary password is generated for root@localhost:"))
+            {
+                ExecuteMethod("成功获取MySQL随机密码");
+            }
+            else
+            {
+                ExecuteMethod("安装MySQL出错了");
+                return;
+            }
+            //安装MySQL服务
+            string install = Cmd.ExecCommand("mysqld --install", mysqlBinUrl);
+            if (install.Contains("Service successfully installed."))
+            {
+                ExecuteMethod("服务成功安装");
+            }
+            else
+            {
+                ExecuteMethod("无法安装MySQL服务");
+                return;
+            }
+            //启动MySQL服务
+            string startMysql = Cmd.ExecCommand("net start mysql", mysqlBinUrl);
+            if (startMysql.Contains("服务已经启动成功"))
+            {
+                ExecuteMethod("服务已经启动成功");
+            }
+            else
+            {
+                ExecuteMethod("无法启动MySQL服务");
+                return;
+            }
+
+            //连接MySQL修改密码
+            ExecuteMethod("正在设置MySQL密码");
+            int i = DbHelperMySQL.ExecuteSql("update user set authentication_string=password('KunYujk1!') where user='root';");
+            if (i > 0)
+            {
+                ExecuteMethod("设置成功");
+            }
+            else
+            {
+                ExecuteMethod("设置失败");
+            }
+            //添加新用户
+            
+            
+
+            //修改配置文件
+            FileStream fs1 = new FileStream(myIniPath, FileMode.Open);
+            byte[] buffer = new byte[1024*1024];
+            int r = fs1.Read(buffer, 0, buffer.Length);
+            string str = Encoding.UTF8.GetString(buffer,0,r);
+            fs1.Close();
+            byte[] bytes1 = Encoding.UTF8.GetBytes(str);
+            FileStream fs2 = new FileStream(myIniPath, FileMode.Create);
+            fs2.Write(bytes1, 0, bytes1.Length);
+            fs2.Close();
+
+            string restartMysql = Cmd.ExecCommand("net stop mysql", mysqlBinUrl);
+            restartMysql = Cmd.ExecCommand("net start mysql", mysqlBinUrl);
+            if (!restartMysql.Contains("服务已经启动成功"))
+            {
+                ExecuteMethod("重启mysql服务失败");
+            }*/
+            //添加新用户
+            DbHelperMySQL.ExecuteSql("CREATE USER 'kyjk'@'%' IDENTIFIED BY 'KunYujk1!';");
+            DbHelperMySQL.ExecuteSql("GRANT ALL ON *.* TO 'kyjk'@'%';");
+        }
         public void CompressFileAndDeleFile(string fileName)
         {
             fileName = fileName + ".zip";
-            textBox1.Text += "正在解压"+ fileName + "\r\n";
-            label1.Text = "正在解压" + fileName + "";
+            this.SetTextBox("正在解压" + fileName);
             new CompressFile().UnZip(url + "\\" + fileName + "", url);
-            textBox1.Text += "解压" + fileName + "结束" + "\r\n";
-            label1.Text = "解压" + fileName + "结束";
+            ExecuteMethod("解压" + fileName + "结束");
+
             //删除mysql.zip文件
-            textBox1.Text += "正在删除" + fileName + "" + "\r\n";
-            label1.Text = "正在删除" + fileName + "";
+            ExecuteMethod("正在删除" + fileName + "");
             if (File.Exists(url + "\\" + fileName + ""))
             {
                 File.Delete(url + "\\" + fileName + "");
-                textBox1.Text += "已删除" + fileName + "" + "\r\n";
-                label1.Text = "已删除" + fileName + "";
+                ExecuteMethod("已删除" + fileName + "");
             }
         }
     }
