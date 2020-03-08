@@ -20,6 +20,7 @@ namespace install
         static CompressFile compressFile = new CompressFile();
         delegate void SetTextCallback(string text);
         delegate void SetTextPanel(int text);
+        public static string mysqlPassword= "KunYujk1!";
         static string url = @"D:\ProgramFiles";
         static string mysqlBinUrl = url + @"\mysql\bin";
         static string myIniPath = url + @"\mysql\my.ini";
@@ -41,7 +42,7 @@ namespace install
             }
             else
             {
-                this.textBox1.Text += text + "\r\n";
+                this.textBox1.Text = text + "\r\n" + this.textBox1.Text;
             }
         }
         //异步给label赋值
@@ -90,19 +91,13 @@ namespace install
         /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
-            try
-            {
-                Thread t = new Thread(new ThreadStart(server));
-                t.Start();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            Thread t = new Thread(new ThreadStart(server));
+            t.Start();
+            
         }
         public void server()
         {
-            //解压mysql
+           /* //解压mysql
             CompressFileAndDeleFile("mysql");
             ExecuteMethod("正在添加my.ini");
             string data = "[mysql]" + "\r\n"
@@ -110,7 +105,7 @@ namespace install
                             + "default-character-set = utf8" + "\r\n"
                             + "[mysqld]" + "\r\n"
                             + "#设置3306端口" + "\r\n"
-                            + "port = 3307" + "\r\n"
+                            + "port = 3306" + "\r\n"
                             + "# 设置mysql的安装目录" + "\r\n"
                             + "basedir = D:\\ProgramFiles\\mysql" + "\r\n"
                             + "# 设置mysql数据库的数据的存放目录" + "\r\n"
@@ -123,8 +118,7 @@ namespace install
                             + "default-storage-engine = INNODB" + "\r\n"
                             + "# 超时时间" + "\r\n"
                             + "default_password_lifetime=0" + "\r\n"
-                            + "# 跳过密码" + "\r\n"
-                            + "skip-grant-tables" + "\r\n";
+                            ;
             byte[] bytes = Encoding.UTF8.GetBytes(data);
             FileStream fs = new FileStream(myIniPath, FileMode.Create);
             fs.Write(bytes, 0, bytes.Length);
@@ -143,7 +137,8 @@ namespace install
             ExecuteMethod("正在nginx服务");
             SetUpShortcut.CreateShortCut(nginxPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "nginx.exe");
             ExecuteMethod("已开启nginx服务");
-
+            FileInfo fileInfo = new FileInfo(nginxPath);
+            Cmd.ExecCommand("mysqld --initialize --user=mysql --console", fileInfo.DirectoryName);
 
             //创建快捷方式
             string PeisPlatformPath = "";
@@ -158,6 +153,9 @@ namespace install
             string mysqld = Cmd.ExecCommand("mysqld --initialize --user=mysql --console", mysqlBinUrl);
             if (mysqld.Contains("A temporary password is generated for root@localhost:"))
             {
+                int start = mysqld.LastIndexOf("root@localhost: ");
+                int stop = mysqld.Length - 2;
+                mysqlPassword = mysqld.Substring(start, stop - start).Replace("root@localhost: ", "");
                 ExecuteMethod("成功获取MySQL随机密码");
             }
             else
@@ -189,8 +187,8 @@ namespace install
             }
 
             //连接MySQL修改密码
-            ExecuteMethod("正在设置MySQL密码");
-            int i = DbHelperMySQL.ExecuteSql("update user set authentication_string=password('KunYujk1!') where user='root';");
+            ExecuteMethod("正在设置MySQL密码");*/
+            /*int i = DbHelperMySQL.ExecuteSql("update mysql.user set authentication_string=password('KunYujk1!') where user='root'");
             if (i > 0)
             {
                 ExecuteMethod("设置成功");
@@ -198,11 +196,15 @@ namespace install
             else
             {
                 ExecuteMethod("设置失败");
-            }
+                return;
+            }*/
+            //DbHelperMySQL.ExecuteSql("flush privileges");
+            string setPass = Cmd.ExecCommand("mysql -uroot -p"+ mysqlPassword + "", "SET PASSWORD = PASSWORD('KunYujk1!');", mysqlBinUrl);
+            //int s = DbHelperMySQL.ExecuteSql("SET PASSWORD = PASSWORD('KunYujk1!')");
             //添加新用户
-            
+
             //修改配置文件
-            FileStream fs1 = new FileStream(myIniPath, FileMode.Open);
+           /* FileStream fs1 = new FileStream(myIniPath, FileMode.Open);
             byte[] buffer = new byte[1024*1024];
             int r = fs1.Read(buffer, 0, buffer.Length);
             string str = Encoding.UTF8.GetString(buffer,0,r);
@@ -210,7 +212,7 @@ namespace install
             byte[] bytes1 = Encoding.UTF8.GetBytes(str.Substring(0,str.IndexOf("skip-grant-tables")));
             FileStream fs2 = new FileStream(myIniPath, FileMode.Create);
             fs2.Write(bytes1, 0, bytes1.Length);
-            fs2.Close();
+            fs2.Close();*/
 
             string restartMysql = Cmd.ExecCommand("net stop mysql", mysqlBinUrl);
             restartMysql = Cmd.ExecCommand("net start mysql", mysqlBinUrl);

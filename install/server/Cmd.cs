@@ -61,6 +61,7 @@ namespace install.server
             process.StartInfo.RedirectStandardError = true;//是否将错误信息写入到RedirectStandardError流中
             process.StartInfo.CreateNoWindow = true;//是否在新窗口中启动该进程
                                                     //p.StartInfo.WorkingDirectory = Server.MapPath("../resources/") + sessionPath;
+            //process.StartInfo.WorkingDirectory = 
             string strOutput = string.Empty;
             string error = string.Empty;
             try
@@ -70,6 +71,7 @@ namespace install.server
                 process.StandardInput.WriteLine(" d: ");
                 process.StandardInput.WriteLine(commandText);
                 process.StandardInput.WriteLine(commandText1);
+                process.StandardInput.WriteLine("exit");
                 process.StandardInput.WriteLine("exit");
                 strOutput = process.StandardOutput.ReadToEnd();
                 error = process.StandardError.ReadToEnd();
