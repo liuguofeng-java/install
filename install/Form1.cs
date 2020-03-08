@@ -16,16 +16,19 @@ namespace install
 {
     public partial class Form1 : Form
     {
-        //设置这个委托支持异步调用文本框控件的文本属性。
+        //委托支持异步
+        static CompressFile compressFile = new CompressFile();
         delegate void SetTextCallback(string text);
         delegate void SetTextPanel(int text);
-        public static string url = @"D:\ProgramFiles";
-        public static string mysqlBinUrl = @"D:\ProgramFiles\mysql\bin";
-        public static string myIniPath = @"D:\ProgramFiles\mysql\my.ini";
-        public static int panel = 10;
+        static string url = @"D:\ProgramFiles";
+        static string mysqlBinUrl = url + @"\mysql\bin";
+        static string myIniPath = url + @"\mysql\my.ini";
+        static int panel = 30;
         
         public Form1()
         {
+            //压缩文件输出提示
+            compressFile.unZipMsg += this.UpZipMsg;
             InitializeComponent();
         }
         //异步给input赋值
@@ -38,11 +41,10 @@ namespace install
             }
             else
             {
-                //在此设置textBox1的文本
                 this.textBox1.Text += text + "\r\n";
             }
         }
-        //异步给input赋值
+        //异步给label赋值
         private void SetLabel(string text)
         {
             if (this.label1.InvokeRequired)
@@ -52,11 +54,10 @@ namespace install
             }
             else
             {
-                //在此设置textBox1的文本
                 this.label1.Text = text;
             }
         }
-        //异步给input赋值
+        //异步给panel赋值
         private void SetPanel(int text)
         {
             if (this.label1.InvokeRequired)
@@ -66,8 +67,7 @@ namespace install
             }
             else
             {
-                //在此设置textBox1的文本
-                this.panel2.Width = text;
+                this.panel2.Width += text;
             }
         }
         //简化调用代码
@@ -76,6 +76,12 @@ namespace install
             this.SetTextBox(text);
             this.SetLabel(text);
             this.SetPanel(panel);
+        }
+        //压缩文件输出
+        public void UpZipMsg(string text)
+        {
+            this.SetTextBox(text);
+            this.SetLabel(text);
         }
         /// <summary>
         /// 点击确定
@@ -96,7 +102,7 @@ namespace install
         }
         public void server()
         {
-            /*//解压mysql
+            //解压mysql
             CompressFileAndDeleFile("mysql");
             ExecuteMethod("正在添加my.ini");
             string data = "[mysql]" + "\r\n"
@@ -124,7 +130,8 @@ namespace install
             fs.Write(bytes, 0, bytes.Length);
             fs.Close();
             ExecuteMethod("添加my.ini成功");
-
+            if (!Directory.Exists(url + @"\mysql\data"))
+                Directory.CreateDirectory(url + @"\mysql\data");
             //解压nginx
             CompressFileAndDeleFile("nginx");
             //解压mysql
@@ -194,15 +201,13 @@ namespace install
             }
             //添加新用户
             
-            
-
             //修改配置文件
             FileStream fs1 = new FileStream(myIniPath, FileMode.Open);
             byte[] buffer = new byte[1024*1024];
             int r = fs1.Read(buffer, 0, buffer.Length);
             string str = Encoding.UTF8.GetString(buffer,0,r);
             fs1.Close();
-            byte[] bytes1 = Encoding.UTF8.GetBytes(str);
+            byte[] bytes1 = Encoding.UTF8.GetBytes(str.Substring(0,str.IndexOf("skip-grant-tables")));
             FileStream fs2 = new FileStream(myIniPath, FileMode.Create);
             fs2.Write(bytes1, 0, bytes1.Length);
             fs2.Close();
@@ -212,7 +217,7 @@ namespace install
             if (!restartMysql.Contains("服务已经启动成功"))
             {
                 ExecuteMethod("重启mysql服务失败");
-            }*/
+            }
             //添加新用户
             DbHelperMySQL.ExecuteSql("CREATE USER 'kyjk'@'%' IDENTIFIED BY 'KunYujk1!';");
             DbHelperMySQL.ExecuteSql("GRANT ALL ON *.* TO 'kyjk'@'%';");
@@ -221,7 +226,7 @@ namespace install
         {
             fileName = fileName + ".zip";
             this.SetTextBox("正在解压" + fileName);
-            new CompressFile().UnZip(url + "\\" + fileName + "", url);
+            compressFile.UnZip(url + "\\" + fileName + "", url);
             ExecuteMethod("解压" + fileName + "结束");
 
             //删除mysql.zip文件
