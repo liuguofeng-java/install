@@ -11,7 +11,7 @@ namespace PeisPlatform.Helper
 	public abstract class DbHelperMySQL
 	{
 		//连接数据库信息
-		public static string connectionString = "server=localhost;database=mysql;uid=root;pwd="+ install.Form1.mysqlPassword + ";port=3306";
+		public static string connectionString = "server=localhost;port=3306;user=root;password='" + install.Form1.mysqlPassword + "'; database=mysql;CharSet=utf8;SslMode=none";
 		public DbHelperMySQL()
 		{
 		}

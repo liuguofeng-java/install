@@ -20,7 +20,8 @@ namespace install
         static CompressFile compressFile = new CompressFile();
         delegate void SetTextCallback(string text);
         delegate void SetTextPanel(int text);
-        public static string mysqlPassword= "KunYujk1!";
+        public static string mysqlPassword;
+        static string nginxUrl;
         static string url = @"D:\ProgramFiles";
         static string mysqlBinUrl = url + @"\mysql\bin";
         static string myIniPath = url + @"\mysql\my.ini";
@@ -97,7 +98,7 @@ namespace install
         }
         public void server()
         {
-           /* //解压mysql
+            /*//解压mysql
             CompressFileAndDeleFile("mysql");
             ExecuteMethod("正在添加my.ini");
             string data = "[mysql]" + "\r\n"
@@ -118,7 +119,7 @@ namespace install
                             + "default-storage-engine = INNODB" + "\r\n"
                             + "# 超时时间" + "\r\n"
                             + "default_password_lifetime=0" + "\r\n"
-                            ;
+                            + "default_authentication_plugin=mysql_native_password" + "\r\n";
             byte[] bytes = Encoding.UTF8.GetBytes(data);
             FileStream fs = new FileStream(myIniPath, FileMode.Create);
             fs.Write(bytes, 0, bytes.Length);
@@ -138,7 +139,9 @@ namespace install
             SetUpShortcut.CreateShortCut(nginxPath, Environment.GetFolderPath(Environment.SpecialFolder.Startup), "nginx.exe");
             ExecuteMethod("已开启nginx服务");
             FileInfo fileInfo = new FileInfo(nginxPath);
-            Cmd.ExecCommand("mysqld --initialize --user=mysql --console", fileInfo.DirectoryName);
+            nginxUrl = fileInfo.DirectoryName;
+            Thread t = new Thread(new ThreadStart(startNginx));
+            t.Start();
 
             //创建快捷方式
             string PeisPlatformPath = "";
@@ -187,57 +190,65 @@ namespace install
             }
 
             //连接MySQL修改密码
-            ExecuteMethod("正在设置MySQL密码");*/
-            /*int i = DbHelperMySQL.ExecuteSql("update mysql.user set authentication_string=password('KunYujk1!') where user='root'");
-            if (i > 0)
+            ExecuteMethod("正在设置MySQL密码");
+            //改密码
+            while (true)
             {
-                ExecuteMethod("设置成功");
-            }
-            else
-            {
-                ExecuteMethod("设置失败");
-                return;
+                try
+                {
+                    DbHelperMySQL.ExecuteSql("SET PASSWORD = PASSWORD('KunYujk1!')");
+                    break;
+                }catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }*/
-            //DbHelperMySQL.ExecuteSql("flush privileges");
-            string setPass = Cmd.ExecCommand("mysql -uroot -p"+ mysqlPassword + "", "SET PASSWORD = PASSWORD('KunYujk1!');", mysqlBinUrl);
-            //int s = DbHelperMySQL.ExecuteSql("SET PASSWORD = PASSWORD('KunYujk1!')");
+            mysqlPassword = "KunYujk1!";
+            RestoreSQL();
             //添加新用户
-
-            //修改配置文件
-           /* FileStream fs1 = new FileStream(myIniPath, FileMode.Open);
-            byte[] buffer = new byte[1024*1024];
-            int r = fs1.Read(buffer, 0, buffer.Length);
-            string str = Encoding.UTF8.GetString(buffer,0,r);
-            fs1.Close();
-            byte[] bytes1 = Encoding.UTF8.GetBytes(str.Substring(0,str.IndexOf("skip-grant-tables")));
-            FileStream fs2 = new FileStream(myIniPath, FileMode.Create);
-            fs2.Write(bytes1, 0, bytes1.Length);
-            fs2.Close();*/
-
-            string restartMysql = Cmd.ExecCommand("net stop mysql", mysqlBinUrl);
-            restartMysql = Cmd.ExecCommand("net start mysql", mysqlBinUrl);
-            if (!restartMysql.Contains("服务已经启动成功"))
+            while (true)
             {
-                ExecuteMethod("重启mysql服务失败");
+                try
+                {
+                    DbHelperMySQL.ExecuteSql("CREATE USER 'kyjk'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'KunYujk1!';");
+                    DbHelperMySQL.ExecuteSql("GRANT ALL ON *.* TO 'pig'@'%';");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
-            //添加新用户
-            DbHelperMySQL.ExecuteSql("CREATE USER 'kyjk'@'%' IDENTIFIED BY 'KunYujk1!';");
-            DbHelperMySQL.ExecuteSql("GRANT ALL ON *.* TO 'kyjk'@'%';");
+            
+        }
+        private void RestoreSQL()
+        {
+            try
+            {
+                StringBuilder sbcommand = new StringBuilder();
+                String directory = Application.StartupPath + "\\data\\" + "peis.sql";
+                //在文件路径后面加上""避免空格出现异常
+                sbcommand.AppendFormat("mysql --host=localhost --default-character-set=gbk --port=3306 --user=root --password='"+mysqlPassword+"' peis<\"{0}\"", directory);
+                String command = sbcommand.ToString();
+                Cmd.ExecCommand(command, mysqlBinUrl);
+                MessageBox.Show("数据库还原成功！");
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("数据库还原失败！");
+            }
+        }
+        public void startNginx()
+        {
+            Cmd.ExecCommand("start nginx", nginxUrl);
         }
         public void CompressFileAndDeleFile(string fileName)
         {
             fileName = fileName + ".zip";
             this.SetTextBox("正在解压" + fileName);
-            compressFile.UnZip(url + "\\" + fileName + "", url);
+            compressFile.UnZip(Application.StartupPath + "\\data\\" + fileName + "", url);
             ExecuteMethod("解压" + fileName + "结束");
-
-            //删除mysql.zip文件
-            ExecuteMethod("正在删除" + fileName + "");
-            if (File.Exists(url + "\\" + fileName + ""))
-            {
-                File.Delete(url + "\\" + fileName + "");
-                ExecuteMethod("已删除" + fileName + "");
-            }
         }
     }
 }
